@@ -4,17 +4,21 @@ from datetime import datetime
 import requests
 import trakt
 from trakt.users import User
+import yaml
+
+with open("config.yml", 'r') as ymlfile:
+    cfg = yaml.load(ymlfile)
 
 ########################## CONFIG #########################################
-trakt.core.OAUTH_TOKEN = 'xxx'
-trakt.core.CLIENT_ID = '131180931168c71c44673fb8b2896017bcf79b4791a504d2d91bec4120bff3d1'
-trakt.core.CLIENT_SECRET = '1aed035ad7f62cfcd38c35f3ced19c8298e9d0f1dcb7dc553df32eb14808736b'
-trakt_user = 'xxx'
-recent_days = 30
+trakt.core.OAUTH_TOKEN = cfg['trakt']['oauth_token']
+trakt.core.CLIENT_ID = cfg['trakt']['client_id']
+trakt.core.CLIENT_SECRET = cfg['trakt']['client_secret']
+trakt_user =  cfg['trakt']['trakt_user']
+recent_days = cfg['trakt']['recent_days']
 
-radarr_ip = 'x.x.x.x' 
-radarr_port = '7878'
-radarr_apikey = 'xxx'
+radarr_ip = cfg['radarr']['ip'] 
+radarr_port = cfg['radarr']['port']
+radarr_apikey = cfg['radarr']['apikey']
 ###########################################################################
 
 trakt.core.AUTH_METHOD = trakt.core.OAUTH_AUTH
@@ -40,7 +44,7 @@ for movie in movies_watched:
 print()
 
 # Get all movies from radarr
-response = requests.get("http://"+radarr_ip+":"+radarr_port+"/api/movie?apikey="+radarr_apikey)
+response = requests.get("http://"+radarr_ip+":"+str(radarr_port)+"/api/movie?apikey="+radarr_apikey)
 
 # Look for recently watched movies in Radarr and change monitored to False
 for movie in response.json():
@@ -56,5 +60,5 @@ for movie in response.json():
             radarr_id = movie["id"]
             movie_json = movie
             movie_json["monitored"] = "False"
-            request_uri ='http://'+radarr_ip+':'+radarr_port+'/api/movie?apikey='+radarr_apikey
+            request_uri ='http://'+radarr_ip+':'+str(radarr_port)+'/api/movie?apikey='+radarr_apikey
             r = requests.put(request_uri, json=movie_json)

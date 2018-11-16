@@ -5,8 +5,7 @@ import requests
 import trakt
 from trakt.users import User
 
-
-trakt.core.AUTH_METHOD = trakt.core.OAUTH_AUTH
+########################## CONFIG #########################################
 trakt.core.OAUTH_TOKEN = 'xxx'
 trakt.core.CLIENT_ID = '131180931168c71c44673fb8b2896017bcf79b4791a504d2d91bec4120bff3d1'
 trakt.core.CLIENT_SECRET = '1aed035ad7f62cfcd38c35f3ced19c8298e9d0f1dcb7dc553df32eb14808736b'
@@ -16,6 +15,9 @@ recent_days = 30
 radarr_ip = 'x.x.x.x' 
 radarr_port = '7878'
 radarr_apikey = 'xxx'
+###########################################################################
+
+trakt.core.AUTH_METHOD = trakt.core.OAUTH_AUTH
 
 # Get all watched movies
 me = trakt.users.User(trakt_user)

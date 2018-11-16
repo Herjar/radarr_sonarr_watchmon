@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 from datetime import datetime
-import os
-import json
 import requests
 import trakt
 from trakt.users import User

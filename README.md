@@ -1,4 +1,4 @@
-# radarr-trakt-watched
+# radarr-sonarr-watchmon
 
 This script checks for recently watched movies/episodes on Trakt and stops monitoring in Radarr/Sonarr.
 

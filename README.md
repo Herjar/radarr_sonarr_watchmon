@@ -1,16 +1,10 @@
 # radarr-trakt-watched
 
-A script to stop monitoring a movie in Radarr when you have watched the movie.
-Watched status is picked up from trakt.
+This script checks for recently watched movies/episodes on Trakt and stops monitoring in Radarr/Sonarr.
 
-Copy config.example.yml to config.yml
+Copy config.example.yml to config.yml and change settings.
 
-Edit the config and set it up to run periodically in e.g. crontab.
+If you do not want to use either Sonarr or Radarr just comment out those settings.
 
-To get the OAUTH_TOKEN you can start an interactive python session and type:
-```
-import trakt
-trakt.core.AUTH_METHOD = trakt.core.OAUTH_AUTH
-trakt.init('traktuser')
-```
-And follow the instructions. Find CLIENT_ID and CLIENT_SECRET in the example config.
+First run should be done interactively to get authorized to Trakt.
+The authorization is then saved to a file and the script can be run periodically in e.g. crontab.

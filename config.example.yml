@@ -1,11 +1,12 @@
 trakt:
     client_id: '131180931168c71c44673fb8b2896017bcf79b4791a504d2d91bec4120bff3d1'
     client_secret: '1aed035ad7f62cfcd38c35f3ced19c8298e9d0f1dcb7dc553df32eb14808736b'
-    oauth_token: 'xxx'
-    trakt_user: 'xxx'
     recent_days: 30
 
 radarr:
-    ip: 'x.x.x.x'
-    port: 7878
+    address: 'x.x.x.x:7878'
+    apikey: 'xxx'
+
+sonarr:
+    address: 'x.x.x.x:8989'
     apikey: 'xxx'

@@ -26,7 +26,6 @@ class watchedMonitor(object):
         try:
             with open('.auth.pkl', 'rb') as f:
                 auth_file = pickle.load(f)
-            # print(auth_file)
             self.authorization = auth_file
         except:
             pass
@@ -37,9 +36,7 @@ class watchedMonitor(object):
             return False
 
         # Request new device code
-        # print(Trakt.client.configuration['client.id'])
         code = Trakt['oauth/device'].code()
-        # print(code)
 
         print('Enter the code "%s" at %s to authenticate your account' % (
             code.get('user_code'),

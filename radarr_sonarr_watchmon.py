@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import absolute_import, division, print_function
 
+import sys
+import os
 from trakt import Trakt
 from datetime import datetime, timedelta
 from threading import Condition
 import logging
-import os
 import pickle
 import requests
 from pprint import pprint
@@ -24,7 +25,7 @@ class watchedMonitor(object):
 
     def auth_load(self):
         try:
-            with open('.auth.pkl', 'rb') as f:
+            with open(os.path.join(sys.path[0], '.auth.pkl'), 'rb') as f:
                 auth_file = pickle.load(f)
             self.authorization = auth_file
         except:
@@ -273,7 +274,7 @@ import yaml
 if __name__ == '__main__':
 
     ########################## CONFIG #########################################
-    with open("config.yml", 'r') as ymlfile:
+    with open(os.path.join(sys.path[0], "config.yml"), 'r') as ymlfile:
         cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
     Trakt.configuration.defaults.client(

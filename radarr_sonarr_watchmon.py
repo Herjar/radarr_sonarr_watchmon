@@ -86,8 +86,11 @@ class watchedMonitor(object):
             print(" Trakt: movies watches in last "+str(recent_days)+" days:")
             for movie in Trakt['sync/history'].movies(start_at=recent_date, pagination=True):
                 movie_dict = movie.to_dict()
-                movies_watched_recently_imdbids.append(movie_dict['ids']['imdb'])
-                print("  "+movie_dict['title'])
+                try:
+                    movies_watched_recently_imdbids.append(movie_dict['ids']['imdb'])
+                    print("  "+movie_dict['title'])
+                except KeyError:
+                    pass
 
         return movies_watched_recently_imdbids
 

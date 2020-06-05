@@ -84,13 +84,17 @@ class watchedMonitor(object):
             movies_watched_recently_imdbids = []
 
             print(" Trakt: movies watches in last "+str(recent_days)+" days:")
-            for movie in Trakt['sync/history'].movies(start_at=recent_date, pagination=True):
-                movie_dict = movie.to_dict()
-                try:
-                    movies_watched_recently_imdbids.append(movie_dict['ids']['imdb'])
-                    print("  "+movie_dict['title'])
-                except KeyError:
-                    pass
+            try:
+                for movie in Trakt['sync/history'].movies(start_at=recent_date, pagination=True):
+                    movie_dict = movie.to_dict()
+                    try:
+                        movies_watched_recently_imdbids.append(movie_dict['ids']['imdb'])
+                        print("  "+movie_dict['title'])
+                    except KeyError:
+                        pass
+            except:
+                print("ERROR: Could not get data from Trakt. Maybe authentication is out of date? Try to delete .auth.pkl file and run script again.")
+                sys.exit()
 
         return movies_watched_recently_imdbids
 

@@ -128,7 +128,7 @@ class watchedMonitor(object):
             recent_date = today - timedelta(days=recent_days)
             show_episodes = dict()
 
-            print(" Trakt: Episodes watches in last "+str(recent_days)+" days:")
+            print(" Trakt: Episodes watched in last "+str(recent_days)+" days:")
             for episode in Trakt['sync/history'].shows(start_at=recent_date, pagination=True, extended='full'):
                 episode_dict = episode.to_dict()
                 ep_no = episode_dict['number']
@@ -206,6 +206,67 @@ class watchedMonitor(object):
                                 sonarr_episode_json["monitored"] = "False"
                                 r = requests.put(request_uri, json=sonarr_episode_json)
 
+    def medusa(self, recent_days, medusa_address, medusa_username, medusa_password):
+
+        print("Medusa:")
+        show_episodes = self.trakt_get_episodes(recent_days)
+
+        print("")
+        print(" Medusa: Episodes found and changed to Archived:")
+
+        # Authenticate with the Medusa API & store the token
+        data = '{"username": "'+medusa_username+'","password": "'+medusa_password+'"}'
+        headers = {'Content-Type': 'application/json'}
+        token = requests.post("http://"+medusa_address+"/api/v2/authenticate", data=data, headers=headers).json()['token']
+        headers = {'authorization': 'Bearer ' + token}
+		
+        # Get all series from Medusa
+        series = requests.get("http://"+medusa_address+"/api/v2/series?limit=1000", headers=headers).json()
+		
+	# Configure episode status to be Archived (6)
+        medusa_status = '{"status": 6}'
+		
+        # Look for recently watched episodes in Medusa and change status to archived
+        for showid_string in show_episodes:
+            showid = int(showid_string)
+
+            for show in series:
+                try:
+                    medusa_tvdb = show["id"]["tvdb"]
+                    medusa_id = show["id"]["slug"]
+                except:
+                    medusa_tvdb = 0
+                    pass
+
+                if showid == medusa_tvdb:
+                    # Get all episodes in show from Medusa
+                    medusa_show_eps = requests.get("http://"+medusa_address+"/api/v2/series/"+medusa_id+"/episodes?limit=1000", headers=headers).json()
+
+                    for trakt_season_ep in show_episodes[showid_string]:
+                        trakt_season = trakt_season_ep[0]
+                        trakt_ep = trakt_season_ep[1]
+
+                        for medusa_show_ep in medusa_show_eps:
+                            try:
+                                medusa_ep = medusa_show_ep["episode"]
+                                medusa_season = medusa_show_ep["season"]
+                                medusa_epid = medusa_show_ep["slug"]
+                                medusa_current_status = medusa_show_ep["status"]
+                            except:
+                                medusa_ep = 0
+                                medusa_season = 0
+                            
+                            if trakt_season == medusa_season and trakt_ep == medusa_ep and medusa_current_status != "Archived" and medusa_current_status != "Ignored":
+                                # Update Medusa episode status
+                                medusa_patch = requests.patch("http://"+medusa_address+"/api/v2/series/"+medusa_id+"/episodes/"+medusa_epid, data=medusa_status, headers=headers).json()
+								
+                                # Confirm episode was updated and print details
+                                if str(medusa_patch) == "{'status': 6}":
+                                    print("  "+show["title"]+" - S"+str(medusa_season).zfill(2)+'E'+ str(medusa_ep).zfill(2))
+                                else:
+                                    print("  Error updating "+show["title"]+" - S"+str(medusa_season).zfill(2)+'E'+ str(medusa_ep).zfill(2))
+				    
+    
     def on_aborted(self):
         """Device authentication aborted.
 
@@ -295,7 +356,7 @@ if __name__ == '__main__':
     recent_days = cfg['trakt']['recent_days']
 
     try: 
-        radarr_use = True
+        radarr_use = cfg['radarr']['enabled'] 
         radarr_address = cfg['radarr']['address'] 
         # radarr_port = cfg['radarr']['port']
         radarr_apikey = cfg['radarr']['apikey']
@@ -303,13 +364,22 @@ if __name__ == '__main__':
         radarr_use = False 
 
     try: 
-        sonarr_use = True
+        sonarr_use = cfg['sonarr']['enabled']
         sonarr_address = cfg['sonarr']['address']
         # sonarr_port = cfg['sonarr']['port']
         sonarr_apikey = cfg['sonarr']['apikey']
     except:
         sonarr_use = False 
 
+    try: 
+        medusa_use = cfg['medusa']['enabled']
+        medusa_address = cfg['medusa']['address']
+        # medusa_port = cfg['medusa']['port']
+        medusa_username = cfg['medusa']['username']
+        medusa_password = cfg['medusa']['password']
+    except:
+        medusa_use = False
+        
     ###########################################################################
 
     # Configure
@@ -337,3 +407,8 @@ if __name__ == '__main__':
         print("")
         print("")
         app.sonarr(recent_days, sonarr_address, sonarr_apikey)
+
+    if medusa_use:
+        print("")
+        print("")
+        app.medusa(recent_days, medusa_address, medusa_username, medusa_password)

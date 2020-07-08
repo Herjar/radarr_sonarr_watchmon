@@ -106,6 +106,9 @@ class watchedMonitor(object):
         # Get all movies from radarr
         response = requests.get("http://"+radarr_address+"/api/movie?apikey="+radarr_apikey)
 
+        if response.status_code == 401:
+            sys.exit("ERROR: Unauthorized request to Radarr API. Are you sure the API key is correct?")
+
         # Look for recently watched movies in Radarr and change monitored to False
         print(" Radarr: Movies found and changed monitored to False:")
         movies = response.json()
@@ -163,6 +166,9 @@ class watchedMonitor(object):
         # Get all series from sonarr
         response = requests.get("http://"+sonarr_address+"/api/series?apikey="+sonarr_apikey)
 
+        if response.status_code == 401:
+            sys.exit("ERROR: Unauthorized request to Sonarr API. Are you sure the API key is correct?")
+
         # Look for recently watched episodes in Sonarr and change monitored to False
         print(" Sonarr: Episodes found and changed monitored to False:")
         series = response.json()
@@ -198,7 +204,7 @@ class watchedMonitor(object):
                             except:
                                 sonarr_ep = 0
                                 sonarr_season = 0
-                            
+
                             if trakt_season == sonarr_season and trakt_ep == sonarr_ep:
                                 print("  " + " -S"+str(sonarr_season).zfill(2)+'E'+ str(sonarr_ep).zfill(2))
 
@@ -223,13 +229,18 @@ class watchedMonitor(object):
         headers = {'Content-Type': 'application/json'}
         token = requests.post("http://"+medusa_address+"/api/v2/authenticate", data=data, headers=headers).json()['token']
         headers = {'authorization': 'Bearer ' + token}
-		
+
         # Get all series from Medusa
-        series = requests.get("http://"+medusa_address+"/api/v2/series?limit=1000", headers=headers).json()
-		
-	# Configure episode status to be Archived (6)
+        response = requests.get("http://"+medusa_address+"/api/v2/series?limit=1000", headers=headers)
+
+        if response.status_code == 401:
+            sys.exit("ERROR: Unauthorized request to Medusa API. Are you sure the API key is correct?")
+
+        series = response.json()
+
+        # Configure episode status to be Archived (6)
         medusa_status = '{"status": 6}'
-		
+
         # Look for recently watched episodes in Medusa and change status to archived
         for showid_string in show_episodes:
             showid = int(showid_string)
@@ -259,18 +270,18 @@ class watchedMonitor(object):
                             except:
                                 medusa_ep = 0
                                 medusa_season = 0
-                            
+
                             if trakt_season == medusa_season and trakt_ep == medusa_ep and medusa_current_status != "Archived" and medusa_current_status != "Ignored":
                                 # Update Medusa episode status
                                 medusa_patch = requests.patch("http://"+medusa_address+"/api/v2/series/"+medusa_id+"/episodes/"+medusa_epid, data=medusa_status, headers=headers).json()
-								
+
                                 # Confirm episode was updated and print details
                                 if str(medusa_patch) == "{'status': 6}":
                                     print("  "+show["title"]+" - S"+str(medusa_season).zfill(2)+'E'+ str(medusa_ep).zfill(2))
                                 else:
                                     print("  Error updating "+show["title"]+" - S"+str(medusa_season).zfill(2)+'E'+ str(medusa_ep).zfill(2))
-				    
-    
+
+
     def on_aborted(self):
         """Device authentication aborted.
 

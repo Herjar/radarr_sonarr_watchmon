@@ -123,7 +123,7 @@ class watchedMonitor(object):
                     print("  "+movie["title"])
                     radarr_id = movie["id"]
                     movie_json = movie
-                    movie_json["monitored"] = "False"
+                    movie_json["monitored"] = False
                     request_uri ='http://'+radarr_address+'/api/movie?apikey='+radarr_apikey
                     r = requests.put(request_uri, json=movie_json)
                     if r.status_code != 202:
@@ -215,7 +215,7 @@ class watchedMonitor(object):
                                 sonarr_episode_json = requests.get(request_uri).json()
 
                                 # Update sonarr episode
-                                sonarr_episode_json["monitored"] = "False"
+                                sonarr_episode_json["monitored"] = False
                                 r = requests.put(request_uri, json=sonarr_episode_json)
                                 if r.status_code != 202:
                                    print("   Error: "+str(r.json()["message"]))

@@ -218,7 +218,7 @@ class watchedMonitor(object):
                                 sonarr_episode_json["monitored"] = "False"
                                 r = requests.put(request_uri, json=sonarr_episode_json)
                                 if r.status_code != 202:
-                                   print("   Error: "+str(r.json()["message"))
+                                   print("   Error: "+str(r.json()["message"]))
 
     def medusa(self, recent_days, medusa_address, medusa_username, medusa_password):
 

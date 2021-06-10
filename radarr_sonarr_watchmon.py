@@ -117,7 +117,7 @@ class watchedMonitor(object):
                 try:
                     radarr_imdb = movie["imdbId"]
                 except:
-                    pass
+                    continue
 
                 if id == radarr_imdb:
                     print("  "+movie["title"])

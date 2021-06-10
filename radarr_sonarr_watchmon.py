@@ -104,7 +104,7 @@ class watchedMonitor(object):
         print("")
 
         # Get all movies from radarr
-        response = requests.get("http://"+radarr_address+"/api/movie?apikey="+radarr_apikey)
+        response = requests.get("http://"+radarr_address+"/api/v3/movie?apikey="+radarr_apikey)
 
         if response.status_code == 401:
             sys.exit("ERROR: Unauthorized request to Radarr API. Are you sure the API key is correct?")
@@ -124,7 +124,7 @@ class watchedMonitor(object):
                     radarr_id = movie["id"]
                     movie_json = movie
                     movie_json["monitored"] = False
-                    request_uri ='http://'+radarr_address+'/api/movie?apikey='+radarr_apikey
+                    request_uri ='http://'+radarr_address+'/api/v3/movie?apikey='+radarr_apikey
                     r = requests.put(request_uri, json=movie_json)
                     if r.status_code != 202:
                         print("   Error: "+str(r.json()["message"]))

@@ -83,7 +83,7 @@ class watchedMonitor(object):
             recent_date = today - timedelta(days=recent_days)
             movies_watched_recently_imdbids = []
 
-            print(" Trakt: movies watches in last "+str(recent_days)+" days:")
+            print(" Trakt: Movies watched in last "+str(recent_days)+" days:")
             try:
                 for movie in Trakt['sync/history'].movies(start_at=recent_date, pagination=True):
                     movie_dict = movie.to_dict()

@@ -126,8 +126,8 @@ class watchedMonitor(object):
                     movie_json["monitored"] = False
                     request_uri ='http://'+radarr_address+'/api/v3/movie?apikey='+radarr_apikey
                     r = requests.put(request_uri, json=movie_json)
-                    if r.status_code != 202:
-                        print("   Error: "+str(r.json()["message"]))
+                    if r.status_code != 200 and r.status_code != 202:
+                        print("   Error "+str(r.status_code)+": "+str(r.json()["message"]))
 
 
     def trakt_get_episodes(self, recent_days):

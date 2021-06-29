@@ -1,5 +1,4 @@
 trakt.py~=3.0.0
-# trakt~=2.9.1
 requests
 pyyaml
 six

@@ -6,11 +6,15 @@ trakt:
 
 radarr:
     enabled: True
+    unmonitor: True
+    tag: 'watched'
     address: 'x.x.x.x:7878'
     apikey: 'xxx'
 
 sonarr:
     enabled: True
+    unmonitor: True
+    tag: False
     address: 'x.x.x.x:8989'
     apikey: 'xxx'
 

@@ -30,6 +30,11 @@ class watchedMonitor(object):
         self.sonarr_tag_id = False
         self.sonarr_unmonitor = True
 
+        self.medusa_use = False
+        self.medusa_address = ''
+        self.medusa_username = ''
+        self.medusa_password = ''
+
         # Bind trakt events
         Trakt.on('oauth.token_refreshed', self.on_token_refreshed)
 
@@ -86,8 +91,66 @@ class watchedMonitor(object):
         # Simulate expired token
         # self.authorization['expires_in'] = 0
 
-        # print(self.authorization)
-        # sys.exit()
+
+    def config_import(self, config_file):
+        with open(os.path.join(sys.path[0], config_file), 'r') as ymlfile:
+            cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
+
+        Trakt.base_url = 'http://api.trakt.tv'
+        Trakt.configuration.defaults.http(retry=True)
+        Trakt.configuration.defaults.oauth(refresh=True)
+        Trakt.configuration.defaults.client(
+            id=cfg['trakt']['client_id'],
+            secret=cfg['trakt']['client_secret']
+        )
+
+        try:
+            self.recent_days = cfg['trakt']['recent_days']
+        except:
+            self.recent_days = 30
+
+        try:
+            self.radarr_use = cfg['radarr']['enabled']
+            self.radarr_address = cfg['radarr']['address']
+            self.radarr_apikey = cfg['radarr']['apikey']
+        except:
+            self.radarr_use = False
+
+        try:
+            self.radarr_tag = cfg['radarr']['tag']
+        except:
+            self.radarr_tag = False
+
+        try:
+            self.radarr_unmonitor = cfg['radarr']['unmonitor']
+        except:
+            self.radarr_unmonitor = True
+
+        try:
+            self.sonarr_use = cfg['sonarr']['enabled']
+            self.sonarr_address = cfg['sonarr']['address']
+            self.sonarr_apikey = cfg['sonarr']['apikey']
+        except:
+            self.sonarr_use = False
+
+        try:
+            self.sonarr_tag = cfg['sonarr']['tag']
+        except:
+            self.sonarr_tag = False
+
+        try:
+            self.sonarr_unmonitor = cfg['sonarr']['unmonitor']
+        except:
+            self.sonarr_unmonitor = True
+
+        try:
+            self.medusa_use = cfg['medusa']['enabled']
+            self.medusa_address = cfg['medusa']['address']
+            self.medusa_username = cfg['medusa']['username']
+            self.medusa_password = cfg['medusa']['password']
+        except:
+            self.medusa_use = False
+
 
 
     def trakt_get_movies(self, recent_days):
@@ -328,23 +391,23 @@ class watchedMonitor(object):
                                    print("   Error: "+str(r.json()["message"]))
 
 
-    def medusa(self, recent_days, medusa_address, medusa_username, medusa_password):
+    def medusa(self):
         print("")
         print("")
         print("TV:")
-        show_episodes = self.trakt_get_episodes(recent_days)
+        show_episodes = self.trakt_get_episodes(self.recent_days)
 
         print("")
         print(" Medusa: Episodes found and changed to Archived:")
 
         # Authenticate with the Medusa API & store the token
-        data = '{"username": "'+medusa_username+'","password": "'+medusa_password+'"}'
+        data = '{"username": "'+self.medusa_username+'","password": "'+self.medusa_password+'"}'
         headers = {'Content-Type': 'application/json'}
-        token = requests.post("http://"+medusa_address+"/api/v2/authenticate", data=data, headers=headers).json()['token']
+        token = requests.post("http://"+self.medusa_address+"/api/v2/authenticate", data=data, headers=headers).json()['token']
         headers = {'authorization': 'Bearer ' + token}
 
         # Get all series from Medusa
-        response = requests.get("http://"+medusa_address+"/api/v2/series?limit=1000", headers=headers)
+        response = requests.get("http://"+self.medusa_address+"/api/v2/series?limit=1000", headers=headers)
 
         if response.status_code == 401:
             sys.exit("ERROR: Unauthorized request to Medusa API. Are you sure the API key is correct?")
@@ -368,7 +431,7 @@ class watchedMonitor(object):
 
                 if showid == medusa_tvdb:
                     # Get all episodes in show from Medusa
-                    medusa_show_eps = requests.get("http://"+medusa_address+"/api/v2/series/"+medusa_id+"/episodes?limit=1000", headers=headers).json()
+                    medusa_show_eps = requests.get("http://"+self.medusa_address+"/api/v2/series/"+medusa_id+"/episodes?limit=1000", headers=headers).json()
 
                     for trakt_season_ep in show_episodes[showid_string]:
                         trakt_season = trakt_season_ep[0]
@@ -386,7 +449,7 @@ class watchedMonitor(object):
 
                             if trakt_season == medusa_season and trakt_ep == medusa_ep and medusa_current_status != "Archived" and medusa_current_status != "Ignored":
                                 # Update Medusa episode status
-                                medusa_patch = requests.patch("http://"+medusa_address+"/api/v2/series/"+medusa_id+"/episodes/"+medusa_epid, data=medusa_status, headers=headers).json()
+                                medusa_patch = requests.patch("http://"+self.medusa_address+"/api/v2/series/"+medusa_id+"/episodes/"+medusa_epid, data=medusa_status, headers=headers).json()
 
                                 # Confirm episode was updated and print details
                                 if str(medusa_patch) == "{'status': 6}":
@@ -403,8 +466,6 @@ class watchedMonitor(object):
         """
 
         print('Authentication aborted')
-
-        # Authentication aborted
         self.is_authenticating.acquire()
         self.is_authenticating.notify_all()
         self.is_authenticating.release()
@@ -422,14 +483,14 @@ class watchedMonitor(object):
 
         # Store authorization for future calls
         self.authorization = authorization
-        print(authorization)
-        print(type(authorization))
 
         # Save authorization to file
         with open('.auth.pkl', 'wb') as f:
             pickle.dump(authorization, f, pickle.HIGHEST_PROTOCOL)
 
         print('Authentication successful - authorization: %r' % self.authorization)
+        print("")
+        print("")
 
         # Authentication complete
         self.is_authenticating.notify_all()
@@ -467,68 +528,8 @@ class watchedMonitor(object):
 
 if __name__ == '__main__':
     app = watchedMonitor()
+    app.config_import("config.yml")
     app.initialize()
-
-    ########################## CONFIG #########################################
-    with open(os.path.join(sys.path[0], "config.yml"), 'r') as ymlfile:
-        cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
-
-    try:
-        app.recent_days = cfg['trakt']['recent_days']
-    except:
-        app.recent_days = 30
-
-    try:
-        app.radarr_use = cfg['radarr']['enabled']
-        app.radarr_address = cfg['radarr']['address']
-        app.radarr_apikey = cfg['radarr']['apikey']
-    except:
-        app.radarr_use = False
-
-    try:
-        app.radarr_tag = cfg['radarr']['tag']
-    except:
-        app.radarr_tag = False
-
-    try:
-        app.radarr_unmonitor = cfg['radarr']['unmonitor']
-    except:
-        app.radarr_unmonitor = True
-
-    try:
-        app.sonarr_use = cfg['sonarr']['enabled']
-        app.sonarr_address = cfg['sonarr']['address']
-        app.sonarr_apikey = cfg['sonarr']['apikey']
-    except:
-        app.sonarr_use = False
-
-    try:
-        app.sonarr_tag = cfg['sonarr']['tag']
-    except:
-        app.sonarr_tag = False
-
-    try:
-        app.sonarr_unmonitor = cfg['sonarr']['unmonitor']
-    except:
-        app.sonarr_unmonitor = True
-
-    try:
-        medusa_use = cfg['medusa']['enabled']
-        medusa_address = cfg['medusa']['address']
-        medusa_username = cfg['medusa']['username']
-        medusa_password = cfg['medusa']['password']
-    except:
-        medusa_use = False
-
-    ###########################################################################
-
-    Trakt.base_url = 'http://api.trakt.tv'
-    Trakt.configuration.defaults.http(retry=True)
-    Trakt.configuration.defaults.oauth(refresh=True)
-    Trakt.configuration.defaults.client(
-        id=cfg['trakt']['client_id'],
-        secret=cfg['trakt']['client_secret']
-    )
 
     if app.radarr_use:
         app.radarr()
@@ -536,5 +537,5 @@ if __name__ == '__main__':
     if app.sonarr_use:
         app.sonarr()
 
-    if medusa_use:
+    if app.medusa_use:
         app.medusa(recent_days, medusa_address, medusa_username, medusa_password)

@@ -170,8 +170,7 @@ class watchedMonitor(object):
                     except KeyError:
                         pass
             except:
-                print("ERROR: Could not get data from Trakt. Maybe authentication is out of date? Try to delete .auth.pkl file and run script again.")
-                sys.exit()
+                sys.exit("ERROR: Could not get data from Trakt. Maybe authentication is out of date? Try to delete .auth.pkl file and run script again.")
 
         return movies_watched_recently_imdbids
 

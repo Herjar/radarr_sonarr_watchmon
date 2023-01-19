@@ -323,7 +323,7 @@ class watchedMonitor(object):
             print("  * Episodes will be unmonitored in Sonarr")
 
         # Get all series from sonarr
-        response = requests.get("http://"+self.sonarr_address+"/api/series?apikey="+self.sonarr_apikey)
+        response = requests.get("http://"+self.sonarr_address+"/api/v3/series?apikey="+self.sonarr_apikey)
 
         if response.status_code == 401:
             sys.exit("ERROR: Unauthorized request to Sonarr API. Are you sure the API key is correct?")
@@ -347,7 +347,7 @@ class watchedMonitor(object):
 
                     if self.sonarr_tag_id:
                         # Add tag to show
-                        request_uri = "http://"+self.sonarr_address+"/api/series/"+str(sonarr_id)+"?apikey="+self.sonarr_apikey
+                        request_uri = "http://"+self.sonarr_address+"/api/v3/series/"+str(sonarr_id)+"?apikey="+self.sonarr_apikey
                         response_show = requests.get(request_uri)
                         sonarr_show_json = response_show.json()
 
@@ -358,7 +358,7 @@ class watchedMonitor(object):
                                 print("   Error "+str(r.status_code)+": "+str(r.json()["message"]))
 
                     # Get all episodes in show from Sonarr
-                    response_eps = requests.get("http://"+self.sonarr_address+"/api/episode/?seriesID="+str(sonarr_id)+"&apikey="+self.sonarr_apikey)
+                    response_eps = requests.get("http://"+self.sonarr_address+"/api/v3/episode/?seriesID="+str(sonarr_id)+"&apikey="+self.sonarr_apikey)
                     sonarr_show_eps = response_eps.json()
 
                     for trakt_season_ep in show_episodes[showid_string]:
@@ -380,7 +380,7 @@ class watchedMonitor(object):
                                 print("    - S"+str(sonarr_season).zfill(2)+'E'+ str(sonarr_ep).zfill(2))
 
                                 # Get sonarr episode
-                                request_uri ='http://'+self.sonarr_address+'/api/episode/'+str(sonarr_epid)+'?apikey='+self.sonarr_apikey
+                                request_uri ='http://'+self.sonarr_address+'/api/v3/episode/'+str(sonarr_epid)+'?apikey='+self.sonarr_apikey
                                 sonarr_episode_json = requests.get(request_uri).json()
 
                                 if self.sonarr_unmonitor:

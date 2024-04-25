@@ -2,3 +2,4 @@ config.yml
 .auth.pkl
 venv
 venv3
+.idea

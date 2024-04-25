@@ -19,63 +19,60 @@ class watchedMonitor(object):
         self.recent_days = 30
 
         self.radarr_use = True
-        self.radarr_address = ''
-        self.radarr_apikey = ''
+        self.radarr_address = ""
+        self.radarr_apikey = ""
         self.radarr_tag_id = False
         self.radarr_unmonitor = True
         self.radarr_delete_file = False
 
         self.sonarr_use = True
-        self.sonarr_address = ''
-        self.sonarr_apikey = ''
+        self.sonarr_address = ""
+        self.sonarr_apikey = ""
         self.sonarr_tag_id = False
         self.sonarr_unmonitor = True
         self.sonarr_delete_file = False
 
         self.medusa_use = False
-        self.medusa_address = ''
-        self.medusa_username = ''
-        self.medusa_password = ''
+        self.medusa_address = ""
+        self.medusa_username = ""
+        self.medusa_password = ""
 
         # Bind trakt events
-        Trakt.on('oauth.token_refreshed', self.on_token_refreshed)
-
+        Trakt.on("oauth.token_refreshed", self.on_token_refreshed)
 
     def auth_load(self):
         try:
-            with open(os.path.join(sys.path[0], '.auth.pkl'), 'rb') as f:
+            with open(os.path.join(sys.path[0], ".auth.pkl"), "rb") as f:
                 auth_file = pickle.load(f)
             self.authorization = auth_file
         except:
             pass
 
-
     def authenticate(self):
         if not self.is_authenticating.acquire(blocking=False):
-            print('Authentication has already been started')
+            print("Authentication has already been started")
             return False
 
         # Request new device code
-        code = Trakt['oauth/device'].code()
+        code = Trakt["oauth/device"].code()
 
-        print('Enter the code "%s" at %s to authenticate your account' % (
-            code.get('user_code'),
-            code.get('verification_url')
+        print("Enter the code \"%s\" at %s to authenticate your account" % (
+            code.get("user_code"),
+            code.get("verification_url")
         ))
 
         # Construct device authentication poller
-        poller = Trakt['oauth/device'].poll(**code)\
-            .on('aborted', self.on_aborted)\
-            .on('authenticated', self.on_authenticated)\
-            .on('expired', self.on_expired)\
-            .on('poll', self.on_poll)
+        poller = Trakt["oauth/device"].poll(**code) \
+            .on("aborted", self.on_aborted) \
+            .on("authenticated", self.on_authenticated) \
+            .on("expired", self.on_expired) \
+            .on("poll", self.on_poll)
 
         # Start polling for authentication token
         poller.start(daemon=False)
 
         # Wait for authentication to complete
         return self.is_authenticating.wait()
-
 
     def initialize(self):
 
@@ -87,83 +84,80 @@ class watchedMonitor(object):
             self.authenticate()
 
         if not self.authorization:
-            print('ERROR: Authentication required')
+            print("ERROR: Authentication required")
             exit(1)
 
         # Simulate expired token
-        # self.authorization['expires_in'] = 0
-
+        # self.authorization["expires_in"] = 0
 
     def config_import(self, config_file):
-        with open(os.path.join(sys.path[0], config_file), 'r') as ymlfile:
+        with open(os.path.join(sys.path[0], config_file), "r") as ymlfile:
             cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
-        Trakt.base_url = 'http://api.trakt.tv'
+        Trakt.base_url = "http://api.trakt.tv"
         Trakt.configuration.defaults.http(retry=True)
         Trakt.configuration.defaults.oauth(refresh=True)
         Trakt.configuration.defaults.client(
-            id=cfg['trakt']['client_id'],
-            secret=cfg['trakt']['client_secret']
+            id=cfg["trakt"]["client_id"],
+            secret=cfg["trakt"]["client_secret"]
         )
 
         try:
-            self.recent_days = cfg['trakt']['recent_days']
+            self.recent_days = cfg["trakt"]["recent_days"]
         except:
             self.recent_days = 30
 
         try:
-            self.radarr_use = cfg['radarr']['enabled']
-            self.radarr_address = cfg['radarr']['address']
-            self.radarr_apikey = cfg['radarr']['apikey']
+            self.radarr_use = cfg["radarr"]["enabled"]
+            self.radarr_address = cfg["radarr"]["address"]
+            self.radarr_apikey = cfg["radarr"]["apikey"]
         except:
             self.radarr_use = False
 
         try:
-            self.radarr_tag = cfg['radarr']['tag']
+            self.radarr_tag = cfg["radarr"]["tag"]
         except:
             self.radarr_tag = False
 
         try:
-            self.radarr_unmonitor = cfg['radarr']['unmonitor']
+            self.radarr_unmonitor = cfg["radarr"]["unmonitor"]
         except:
             self.radarr_unmonitor = True
 
         try:
-            self.radarr_delete_file = cfg['radarr']['delete_file']
+            self.radarr_delete_file = cfg["radarr"]["delete_file"]
         except:
             self.radarr_delete_file = False
 
         try:
-            self.sonarr_use = cfg['sonarr']['enabled']
-            self.sonarr_address = cfg['sonarr']['address']
-            self.sonarr_apikey = cfg['sonarr']['apikey']
+            self.sonarr_use = cfg["sonarr"]["enabled"]
+            self.sonarr_address = cfg["sonarr"]["address"]
+            self.sonarr_apikey = cfg["sonarr"]["apikey"]
         except:
             self.sonarr_use = False
 
         try:
-            self.sonarr_tag = cfg['sonarr']['tag']
+            self.sonarr_tag = cfg["sonarr"]["tag"]
         except:
             self.sonarr_tag = False
 
         try:
-            self.sonarr_unmonitor = cfg['sonarr']['unmonitor']
+            self.sonarr_unmonitor = cfg["sonarr"]["unmonitor"]
         except:
             self.sonarr_unmonitor = True
 
         try:
-            self.sonarr_delete_file = cfg['sonarr']['delete_file']
+            self.sonarr_delete_file = cfg["sonarr"]["delete_file"]
         except:
             self.sonarr_delete_file = False
 
         try:
-            self.medusa_use = cfg['medusa']['enabled']
-            self.medusa_address = cfg['medusa']['address']
-            self.medusa_username = cfg['medusa']['username']
-            self.medusa_password = cfg['medusa']['password']
+            self.medusa_use = cfg["medusa"]["enabled"]
+            self.medusa_address = cfg["medusa"]["address"]
+            self.medusa_username = cfg["medusa"]["username"]
+            self.medusa_password = cfg["medusa"]["password"]
         except:
             self.medusa_use = False
-
-
 
     def trakt_get_movies(self, recent_days):
         with Trakt.configuration.oauth.from_response(self.authorization, refresh=True):
@@ -172,13 +166,13 @@ class watchedMonitor(object):
             recent_date = today - timedelta(days=recent_days)
             movies_watched_recently_imdbids = []
 
-            print(" Trakt: Movies watched in last "+str(recent_days)+" days:")
+            print(" Trakt: Movies watched in last " + str(recent_days) + " days:")
             try:
-                for movie in Trakt['sync/history'].movies(start_at=recent_date, pagination=True):
+                for movie in Trakt["sync/history"].movies(start_at=recent_date, pagination=True):
                     movie_dict = movie.to_dict()
                     try:
-                        movies_watched_recently_imdbids.append(movie_dict['ids']['imdb'])
-                        print("  - "+movie_dict['title'])
+                        movies_watched_recently_imdbids.append(movie_dict["ids"]["imdb"])
+                        print("  - " + movie_dict["title"])
                     except KeyError:
                         pass
             except:
@@ -186,14 +180,13 @@ class watchedMonitor(object):
 
         return movies_watched_recently_imdbids
 
-
     def radarr(self):
         print("Movies:")
         movies_watched_recently_imdbids = self.trakt_get_movies(self.recent_days)
         print("")
 
         # Get all movies from radarr
-        response = requests.get("http://"+self.radarr_address+"/api/v3/movie?apikey="+self.radarr_apikey)
+        response = requests.get("http://" + self.radarr_address + "/api/v3/movie?apikey=" + self.radarr_apikey)
 
         if response.status_code == 401:
             sys.exit(" ERROR: Unauthorized request to Radarr API. Are you sure the API key is correct?")
@@ -206,7 +199,7 @@ class watchedMonitor(object):
 
         if self.radarr_tag_id:
             print("  * Movies will be tagged in Radarr")
-        
+
         if self.radarr_unmonitor:
             print("  * Movies will be unmonitored in Radarr")
 
@@ -220,8 +213,7 @@ class watchedMonitor(object):
                     continue
 
                 if id == radarr_imdb:
-                    print("   - "+movie["title"])
-                    radarr_id = movie["id"]
+                    print("   - " + movie["title"])
                     movie_json = movie
 
                     if self.radarr_tag_id:
@@ -231,72 +223,70 @@ class watchedMonitor(object):
                     if self.radarr_unmonitor:
                         movie_json["monitored"] = False
 
-                    request_uri = 'http://'+self.radarr_address+'/api/v3/movie?apikey='+self.radarr_apikey
+                    request_uri = "http://" + self.radarr_address + "/api/v3/movie?apikey=" + self.radarr_apikey
                     r = requests.put(request_uri, json=movie_json)
                     if r.status_code != 200 and r.status_code != 202:
-                        print("   Error "+str(r.status_code)+": "+str(r.json()["message"]))
+                        print("   Error " + str(r.status_code) + ": " + str(r.json()["message"]))
 
                     if self.radarr_delete_file:
                         if "movieFile" not in movie_json.keys():
                             print("      You wanted to delete this Movie but it doesn't exists")
                         else:
                             radarr_moviefile_id = movie_json["movieFile"]["id"]
-                            request_uri = 'http://'+self.radarr_address+'/api/v3/moviefile/'+str(radarr_moviefile_id)+'?apikey='+self.radarr_apikey
+                            request_uri = "http://" + self.radarr_address + "/api/v3/moviefile/" + str(
+                                radarr_moviefile_id) + "?apikey=" + self.radarr_apikey
                             r = requests.delete(request_uri)
                             if r.status_code != 200:
-                                print("   Error: "+str(r.text))
+                                print("   Error: " + str(r.text))
 
         print("")
         print("")
-
 
     def radarr_tag_set_id(self):
         # Get all tags from radarr
-        response = requests.get("http://"+self.radarr_address+"/api/v3/tag?apikey="+self.radarr_apikey)
+        response = requests.get("http://" + self.radarr_address + "/api/v3/tag?apikey=" + self.radarr_apikey)
 
         if response.status_code == 401:
             sys.exit(" ERROR: Unauthorized request to Radarr API. Are you sure the API key is correct?")
 
         for tag in response.json():
-            if tag['label'] == self.radarr_tag:
+            if tag["label"] == self.radarr_tag:
                 # Tag already exist in radarr
                 print("  * Found tag in Radarr. Using existing tag id.")
-                self.radarr_tag_id = tag['id']
+                self.radarr_tag_id = tag["id"]
 
         if not self.radarr_tag_id:
             print("  * Radarr tag does not exist. Creating new tag.")
-            tag_new_json = {'id': 0, 'label': self.radarr_tag}
-            request_uri ='http://'+self.radarr_address+'/api/v3/tag?apikey='+self.radarr_apikey
+            tag_new_json = {"id": 0, "label": self.radarr_tag}
+            request_uri = "http://" + self.radarr_address + "/api/v3/tag?apikey=" + self.radarr_apikey
             r = requests.post(request_uri, json=tag_new_json)
             if r.status_code != 200 and r.status_code != 201 and r.status_code != 202:
-                print("   Error "+str(r.status_code)+" adding tag: "+str(r.json()[0]["errorMessage"]))
+                print("   Error " + str(r.status_code) + " adding tag: " + str(r.json()[0]["errorMessage"]))
 
-            self.radarr_tag_id = r.json()['id']
-
+            self.radarr_tag_id = r.json()["id"]
 
     def sonarr_tag_set_id(self):
         # Get all tags from sonarr
-        response = requests.get("http://"+self.sonarr_address+"/api/v3/tag?apikey="+self.sonarr_apikey)
+        response = requests.get("http://" + self.sonarr_address + "/api/v3/tag?apikey=" + self.sonarr_apikey)
 
         if response.status_code == 401:
             sys.exit(" ERROR: Unauthorized request to Sonarr API. Are you sure the API key is correct?")
 
         for tag in response.json():
-            if tag['label'] == self.sonarr_tag:
+            if tag["label"] == self.sonarr_tag:
                 # Tag already exist in sonarr
                 print("  * Found tag in Sonarr. Using existing tag id.")
-                self.sonarr_tag_id = tag['id']
+                self.sonarr_tag_id = tag["id"]
 
         if not self.sonarr_tag_id:
             print("  * Sonarr tag does not exist. Creating new tag.")
-            tag_new_json = {'id': 0, 'label': self.sonarr_tag}
-            request_uri ='http://'+self.sonarr_address+'/api/v3/tag?apikey='+self.sonarr_apikey
+            tag_new_json = {"id": 0, "label": self.sonarr_tag}
+            request_uri = "http://" + self.sonarr_address + "/api/v3/tag?apikey=" + self.sonarr_apikey
             r = requests.post(request_uri, json=tag_new_json)
             if r.status_code != 200 and r.status_code != 201 and r.status_code != 202:
-                print("   Error "+str(r.status_code)+" adding tag: "+str(r.json()[0]["errorMessage"]))
+                print("   Error " + str(r.status_code) + " adding tag: " + str(r.json()[0]["errorMessage"]))
 
-            self.sonarr_tag_id = r.json()['id']
-
+            self.sonarr_tag_id = r.json()["id"]
 
     def trakt_get_episodes(self, recent_days):
         with Trakt.configuration.oauth.from_response(self.authorization, refresh=True):
@@ -305,26 +295,25 @@ class watchedMonitor(object):
             recent_date = today - timedelta(days=recent_days)
             show_episodes = dict()
 
-            print(" Trakt: Episodes watched in last "+str(recent_days)+" days:")
-            for episode in Trakt['sync/history'].shows(start_at=recent_date, pagination=True, extended='full'):
+            print(" Trakt: Episodes watched in last " + str(recent_days) + " days:")
+            for episode in Trakt["sync/history"].shows(start_at=recent_date, pagination=True, extended="full"):
                 episode_dict = episode.to_dict()
-                ep_no = episode_dict['number']
+                ep_no = episode_dict["number"]
                 show = episode.show
                 season = episode.season
                 season_no = season.pk
                 show_tvdb = show.pk[1]
 
                 if show_tvdb in show_episodes:
-                    # show_episodes_tvdbids[show_tvdb].append(episode_dict['ids']['tvdb'])
+                    # show_episodes_tvdbids[show_tvdb].append(episode_dict["ids"]["tvdb"])
                     show_episodes[show_tvdb].append([season_no, ep_no])
                 else:
                     show_episodes[show_tvdb] = []
                     show_episodes[show_tvdb].append([season_no, ep_no])
 
-                print("  " + show.title + " - S"+str(season_no).zfill(2)+'E'+ str(episode_dict['number']).zfill(2) + ": " + episode_dict['title'])
+                print("  " + show.title + " - S"+str(season_no).zfill(2)+"E"+ str(episode_dict["number"]).zfill(2) + ": " + episode_dict["title"])
 
         return show_episodes
-
 
     def sonarr(self):
 
@@ -339,12 +328,12 @@ class watchedMonitor(object):
 
         if self.sonarr_tag_id:
             print("  * Shows will be tagged in Sonarr")
-        
+
         if self.sonarr_unmonitor:
             print("  * Episodes will be unmonitored in Sonarr")
 
         # Get all series from sonarr
-        response = requests.get("http://"+self.sonarr_address+"/api/v3/series?apikey="+self.sonarr_apikey)
+        response = requests.get("http://" + self.sonarr_address + "/api/v3/series?apikey=" + self.sonarr_apikey)
 
         if response.status_code == 401:
             sys.exit("ERROR: Unauthorized request to Sonarr API. Are you sure the API key is correct?")
@@ -361,14 +350,13 @@ class watchedMonitor(object):
                     sonarr_id = show["id"]
                 except:
                     sonarr_tvdb = 0
-                    pass
 
                 if showid == sonarr_tvdb:
-                    print("   "+show["title"])
+                    print("   " + show["title"])
 
                     if self.sonarr_tag_id:
                         # Add tag to show
-                        request_uri = "http://"+self.sonarr_address+"/api/v3/series/"+str(sonarr_id)+"?apikey="+self.sonarr_apikey
+                        request_uri = "http://" + self.sonarr_address + "/api/v3/series/" + str(sonarr_id) + "?apikey=" + self.sonarr_apikey
                         response_show = requests.get(request_uri)
                         sonarr_show_json = response_show.json()
 
@@ -376,10 +364,10 @@ class watchedMonitor(object):
                             sonarr_show_json["tags"].append(self.sonarr_tag_id)
                             r = requests.put(request_uri, json=sonarr_show_json)
                             if r.status_code != 200 and r.status_code != 202:
-                                print("   Error "+str(r.status_code)+": "+str(r.json()["message"]))
+                                print("   Error " + str(r.status_code) + ": " + str(r.json()["message"]))
 
                     # Get all episodes in show from Sonarr
-                    response_eps = requests.get("http://"+self.sonarr_address+"/api/v3/episode/?seriesID="+str(sonarr_id)+"&apikey="+self.sonarr_apikey)
+                    response_eps = requests.get("http://" + self.sonarr_address + "/api/v3/episode/?seriesID=" + str(sonarr_id) + "&apikey=" + self.sonarr_apikey)
                     sonarr_show_eps = response_eps.json()
 
                     for trakt_season_ep in show_episodes[showid_string]:
@@ -398,10 +386,10 @@ class watchedMonitor(object):
                                 sonarr_season = 0
 
                             if trakt_season == sonarr_season and trakt_ep == sonarr_ep:
-                                print("    - S"+str(sonarr_season).zfill(2)+'E'+ str(sonarr_ep).zfill(2))
+                                print("    - S" + str(sonarr_season).zfill(2) + "E" + str(sonarr_ep).zfill(2))
 
                                 # Get sonarr episode
-                                request_uri ='http://'+self.sonarr_address+'/api/v3/episode/'+str(sonarr_epid)+'?apikey='+self.sonarr_apikey
+                                request_uri = "http://" + self.sonarr_address + "/api/v3/episode/" + str(sonarr_epid) + "?apikey=" + self.sonarr_apikey
                                 sonarr_episode_json = requests.get(request_uri).json()
 
                                 if self.sonarr_unmonitor:
@@ -409,18 +397,18 @@ class watchedMonitor(object):
 
                                 r = requests.put(request_uri, json=sonarr_episode_json)
                                 if r.status_code != 200 and r.status_code != 202:
-                                   print("   Error: "+str(r.json()["message"]))
+                                    print("   Error: " + str(r.json()["message"]))
 
                                 if self.sonarr_delete_file:
                                     if "episodeFile" not in sonarr_episode_json.keys():
                                         print("      You wanted to delete this episode but it doesn't exists")
                                     else:
                                         sonarr_episodefile_id = sonarr_episode_json["episodeFile"]["id"]
-                                        request_uri = 'http://'+self.sonarr_address+'/api/v3/episodefile/'+str(sonarr_episodefile_id)+'?apikey='+self.sonarr_apikey
+                                        request_uri = "http://" + self.sonarr_address + "/api/v3/episodefile/" + str(
+                                            sonarr_episodefile_id) + "?apikey=" + self.sonarr_apikey
                                         r = requests.delete(request_uri)
                                         if r.status_code != 200:
-                                            print("   Error: "+str(r.text))
-
+                                            print("   Error: " + str(r.text))
 
     def medusa(self):
         print("")
@@ -432,13 +420,13 @@ class watchedMonitor(object):
         print(" Medusa: Episodes found and changed to Archived:")
 
         # Authenticate with the Medusa API & store the token
-        data = '{"username": "'+self.medusa_username+'","password": "'+self.medusa_password+'"}'
-        headers = {'Content-Type': 'application/json'}
-        token = requests.post("http://"+self.medusa_address+"/api/v2/authenticate", data=data, headers=headers).json()['token']
-        headers = {'authorization': 'Bearer ' + token}
+        data = '{"username": "" + self.medusa_username + "","password": "" + self.medusa_password + ""}'
+        headers = {"Content-Type": "application/json"}
+        token = requests.post("http://" + self.medusa_address + "/api/v2/authenticate", data=data, headers=headers).json()["token"]
+        headers = {"authorization": "Bearer " + token}
 
         # Get all series from Medusa
-        response = requests.get("http://"+self.medusa_address+"/api/v2/series?limit=1000", headers=headers)
+        response = requests.get("http://" + self.medusa_address + "/api/v2/series?limit=1000", headers=headers)
 
         if response.status_code == 401:
             sys.exit("ERROR: Unauthorized request to Medusa API. Are you sure the API key is correct?")
@@ -458,11 +446,11 @@ class watchedMonitor(object):
                     medusa_id = show["id"]["slug"]
                 except:
                     medusa_tvdb = 0
-                    pass
 
                 if showid == medusa_tvdb:
                     # Get all episodes in show from Medusa
-                    medusa_show_eps = requests.get("http://"+self.medusa_address+"/api/v2/series/"+medusa_id+"/episodes?limit=1000", headers=headers).json()
+                    medusa_show_eps = requests.get("http://" + self.medusa_address + "/api/v2/series/" + medusa_id + "/episodes?limit=1000",
+                        headers=headers).json()
 
                     for trakt_season_ep in show_episodes[showid_string]:
                         trakt_season = trakt_season_ep[0]
@@ -480,14 +468,14 @@ class watchedMonitor(object):
 
                             if trakt_season == medusa_season and trakt_ep == medusa_ep and medusa_current_status != "Archived" and medusa_current_status != "Ignored":
                                 # Update Medusa episode status
-                                medusa_patch = requests.patch("http://"+self.medusa_address+"/api/v2/series/"+medusa_id+"/episodes/"+medusa_epid, data=medusa_status, headers=headers).json()
+                                medusa_patch = requests.patch("http://" + self.medusa_address + "/api/v2/series/" + medusa_id + "/episodes/" + medusa_epid,
+                                    data=medusa_status, headers=headers).json()
 
                                 # Confirm episode was updated and print details
-                                if str(medusa_patch) == "{'status': 6}":
-                                    print("  "+show["title"]+" - S"+str(medusa_season).zfill(2)+'E'+ str(medusa_ep).zfill(2))
+                                if str(medusa_patch) == '{"status": 6}':
+                                    print("  " + show["title"] + " - S" + str(medusa_season).zfill(2) + "E" + str(medusa_ep).zfill(2))
                                 else:
-                                    print("  Error updating "+show["title"]+" - S"+str(medusa_season).zfill(2)+'E'+ str(medusa_ep).zfill(2))
-
+                                    print("  Error updating " + show["title"] + " - S" + str(medusa_season).zfill(2) + "E" + str(medusa_ep).zfill(2))
 
     def on_aborted(self):
         """Device authentication aborted.
@@ -496,11 +484,10 @@ class watchedMonitor(object):
         or via the "poll" event)
         """
 
-        print('Authentication aborted')
+        print("Authentication aborted")
         self.is_authenticating.acquire()
         self.is_authenticating.notify_all()
         self.is_authenticating.release()
-
 
     def on_authenticated(self, authorization):
         """Device authenticated.
@@ -516,10 +503,10 @@ class watchedMonitor(object):
         self.authorization = authorization
 
         # Save authorization to file
-        with open('.auth.pkl', 'wb') as f:
+        with open(".auth.pkl", "wb") as f:
             pickle.dump(authorization, f, pickle.HIGHEST_PROTOCOL)
 
-        print('Authentication successful - authorization: %r' % self.authorization)
+        print("Authentication successful - authorization: %r" % self.authorization)
         print("")
         print("")
 
@@ -527,17 +514,15 @@ class watchedMonitor(object):
         self.is_authenticating.notify_all()
         self.is_authenticating.release()
 
-
     def on_expired(self):
         """Device authentication expired."""
 
-        print('Authentication expired')
+        print("Authentication expired")
 
         # Authentication expired
         self.is_authenticating.acquire()
         self.is_authenticating.notify_all()
         self.is_authenticating.release()
-
 
     def on_poll(self, callback):
         """Device authentication poll.
@@ -549,15 +534,14 @@ class watchedMonitor(object):
         # Continue polling
         callback(True)
 
-
     def on_token_refreshed(self, authorization):
         # OAuth token refreshed, store authorization for future calls
         self.authorization = authorization
 
-        print('Token refreshed - authorization: %r' % self.authorization)
+        print("Token refreshed - authorization: %r" % self.authorization)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = watchedMonitor()
     app.config_import("config.yml")
     app.initialize()

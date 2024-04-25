@@ -23,12 +23,14 @@ class watchedMonitor(object):
         self.radarr_apikey = ''
         self.radarr_tag_id = False
         self.radarr_unmonitor = True
+        self.radarr_delete_file = False
 
         self.sonarr_use = True
         self.sonarr_address = ''
         self.sonarr_apikey = ''
         self.sonarr_tag_id = False
         self.sonarr_unmonitor = True
+        self.sonarr_delete_file = False
 
         self.medusa_use = False
         self.medusa_address = ''
@@ -127,6 +129,11 @@ class watchedMonitor(object):
             self.radarr_unmonitor = True
 
         try:
+            self.radarr_delete_file = cfg['radarr']['delete_file']
+        except:
+            self.radarr_delete_file = False
+
+        try:
             self.sonarr_use = cfg['sonarr']['enabled']
             self.sonarr_address = cfg['sonarr']['address']
             self.sonarr_apikey = cfg['sonarr']['apikey']
@@ -142,6 +149,11 @@ class watchedMonitor(object):
             self.sonarr_unmonitor = cfg['sonarr']['unmonitor']
         except:
             self.sonarr_unmonitor = True
+
+        try:
+            self.sonarr_delete_file = cfg['sonarr']['delete_file']
+        except:
+            self.sonarr_delete_file = False
 
         try:
             self.medusa_use = cfg['medusa']['enabled']
@@ -223,6 +235,16 @@ class watchedMonitor(object):
                     r = requests.put(request_uri, json=movie_json)
                     if r.status_code != 200 and r.status_code != 202:
                         print("   Error "+str(r.status_code)+": "+str(r.json()["message"]))
+
+                    if self.radarr_delete_file:
+                        if "movieFile" not in movie_json.keys():
+                            print("      You wanted to delete this Movie but it doesn't exists")
+                        else:
+                            radarr_moviefile_id = movie_json["movieFile"]["id"]
+                            request_uri = 'http://'+self.radarr_address+'/api/v3/moviefile/'+str(radarr_moviefile_id)+'?apikey='+self.radarr_apikey
+                            r = requests.delete(request_uri)
+                            if r.status_code != 200:
+                                print("   Error: "+str(r.text))
 
         print("")
         print("")
@@ -388,6 +410,16 @@ class watchedMonitor(object):
                                 r = requests.put(request_uri, json=sonarr_episode_json)
                                 if r.status_code != 200 and r.status_code != 202:
                                    print("   Error: "+str(r.json()["message"]))
+
+                                if self.sonarr_delete_file:
+                                    if "episodeFile" not in sonarr_episode_json.keys():
+                                        print("      You wanted to delete this episode but it doesn't exists")
+                                    else:
+                                        sonarr_episodefile_id = sonarr_episode_json["episodeFile"]["id"]
+                                        request_uri = 'http://'+self.sonarr_address+'/api/v3/episodefile/'+str(sonarr_episodefile_id)+'?apikey='+self.sonarr_apikey
+                                        r = requests.delete(request_uri)
+                                        if r.status_code != 200:
+                                            print("   Error: "+str(r.text))
 
 
     def medusa(self):

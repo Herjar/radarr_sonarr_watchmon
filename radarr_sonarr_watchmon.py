@@ -94,7 +94,7 @@ class watchedMonitor(object):
         with open(os.path.join(sys.path[0], config_file), "r") as ymlfile:
             cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
-        Trakt.base_url = "http://api.trakt.tv"
+        Trakt.base_url = "https://api.trakt.tv"
         Trakt.configuration.defaults.http(retry=True)
         Trakt.configuration.defaults.oauth(refresh=True)
         Trakt.configuration.defaults.client(

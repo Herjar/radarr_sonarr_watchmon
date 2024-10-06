@@ -1,4 +1,4 @@
-trakt.py~=3.0.0
+trakt.py~=4.4.0
 requests
 pyyaml
 six
